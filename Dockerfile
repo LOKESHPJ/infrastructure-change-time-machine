@@ -15,8 +15,9 @@ COPY incident_correlator.py .
 COPY incident_report.py .
 COPY recovery_planner.py .
 COPY recovery_logic.py .
+COPY run_pipeline.py .
 COPY terraform_reader.py .
 COPY database_schema.sql .
 COPY terraform ./terraform
 
-CMD ["python", "aws_collector.py"]
+CMD ["python", "run_pipeline.py"]
