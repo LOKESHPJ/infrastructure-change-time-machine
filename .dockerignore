@@ -1,4 +1,4 @@
-`.venv/
+.venv/
 __pycache__/
 *.pyc
 *.save
@@ -16,3 +16,6 @@ recovery_plans/
 terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+
+.venv312/
+.pytest_cache/

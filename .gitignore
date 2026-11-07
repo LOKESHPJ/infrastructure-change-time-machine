@@ -29,3 +29,4 @@ terraform/terraform.tfstate.*
 # Temporary files
 awstouch
 *.log
+.venv312/

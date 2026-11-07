@@ -5,7 +5,7 @@ from datetime import datetime
 from database import get_connection
 from psycopg2.extras import Json
 
-snapshot_files = sorted(glob.glob("snapshots/*.json"))
+snapshot_files = sorted(glob.glob("snapshots/snapshot_*.json"))
 cloudtrail_files = sorted(glob.glob("cloudtrail_logs/*.json"))
 
 if not snapshot_files or not cloudtrail_files:

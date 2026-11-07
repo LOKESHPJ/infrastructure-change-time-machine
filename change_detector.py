@@ -6,7 +6,7 @@ snapshot_dir = "snapshots"
 
 files = sorted(
     f for f in os.listdir(snapshot_dir)
-    if f.endswith(".json")
+    if f.startswith("snapshot_") and f.endswith(".json")
 )
 
 if len(files) < 2:
