@@ -1,0 +1,27 @@
+flowchart TD
+    A["AWS Infrastructure"] --> B["Amazon EC2"]
+    A --> C["AWS CloudTrail"]
+
+    B --> D["AWS Collector - Python / Boto3"]
+    C --> E["CloudTrail Collector - Python / Boto3"]
+
+    D --> F["Infrastructure Snapshots"]
+    F --> G["Change Detector"]
+
+    E --> H["Event Analyzer"]
+    H --> I["Incident Correlator"]
+
+    G --> J["Incident Reporting Engine"]
+    I --> J
+
+    J --> K["Recovery Planner"]
+    K --> L[("PostgreSQL Database")]
+
+    M["Terraform State"] --> N["Terraform Reader"]
+    F --> N
+    N --> O["Infrastructure Comparison"]
+
+    P["Docker Container"] -. "Packages application modules" .-> D
+    P -.-> E
+    P -.-> G
+    P -.-> J
