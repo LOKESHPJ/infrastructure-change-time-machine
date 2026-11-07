@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.save
+
+# Secrets
+.env
+.env.*
+*.pem
+*.ppk
+*.key
+
+# AWS credentials
+.aws/
+
+# Generated project data
+snapshots/
+cloudtrail_logs/
+reports/
+recovery_plans/
+
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+*.tfplan
+
+# Temporary files
+awstouch
+*.log
