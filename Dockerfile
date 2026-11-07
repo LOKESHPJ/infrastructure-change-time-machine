@@ -21,3 +21,8 @@ COPY database_schema.sql .
 COPY terraform ./terraform
 
 CMD ["python", "run_pipeline.py"]
+
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
