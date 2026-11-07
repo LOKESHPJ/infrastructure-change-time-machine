@@ -14,6 +14,7 @@ COPY event_analyzer.py .
 COPY incident_correlator.py .
 COPY incident_report.py .
 COPY recovery_planner.py .
+COPY recovery_logic.py .
 COPY terraform_reader.py .
 COPY database_schema.sql .
 COPY terraform ./terraform
