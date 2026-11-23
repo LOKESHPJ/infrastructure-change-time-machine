@@ -11,6 +11,7 @@ PIPELINE = [
     ("Incident Report Generation", "incident_report.py"),
     ("Recovery Plan Generation", "recovery_planner.py"),
     ("Terraform vs AWS Comparison", "terraform_reader.py"),
+    ("Transient Activity Detection", "transient_activity_detector.py"),
 ]
 
 
@@ -26,7 +27,7 @@ def run_pipeline():
         print("-" * 50)
 
         result = subprocess.run(
-            [sys.executable, script],
+            [sys.executable, "-u", script],
             check=False
         )
 

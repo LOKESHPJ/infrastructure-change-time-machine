@@ -1,0 +1,44 @@
+
+services:
+  db:
+    image: postgres:15
+    container_name: itm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-infrastructure_time_machine}
+      POSTGRES_USER: ${DB_USER:-itm_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - itm_postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-itm_app} -d ${DB_NAME:-infrastructure_time_machine}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: itm-app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      HOME: /home/appuser
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./snapshots:/app/snapshots
+      - ./cloudtrail_logs:/app/cloudtrail_logs
+      - ./reports:/app/reports
+      - ./recovery_plans:/app/recovery_plans
+      - ./terraform/terraform.tfstate:/app/terraform/terraform.tfstate:ro
+
+volumes:
+  itm_postgres_data:

@@ -1,4 +1,3 @@
-
 import boto3
 import json
 import os
@@ -8,40 +7,50 @@ from database import get_connection
 from psycopg2.extras import Json
 
 
-# Connect to AWS CloudTrail
 cloudtrail = boto3.client(
     "cloudtrail",
     region_name="us-east-1"
 )
 
-# Collect events from the previous 24 hours
 end_time = datetime.now(timezone.utc)
 start_time = end_time - timedelta(hours=24)
 
-response = cloudtrail.lookup_events(
-    StartTime=start_time,
-    EndTime=end_time,
-    MaxResults=50
-)
+# Collect all pages instead of stopping after 50 events.
+paginator = cloudtrail.get_paginator("lookup_events")
 
 events = []
 
-for event in response["Events"]:
-    events.append({
-        "EventId": event.get("EventId"),
-        "EventName": event.get("EventName"),
-        "EventTime": event.get("EventTime").isoformat(),
-        "Username": event.get("Username"),
-        "EventSource": event.get("EventSource"),
-        "ReadOnly": event.get("ReadOnly"),
-        "Resources": event.get("Resources", [])
-    })
+for page in paginator.paginate(
+    StartTime=start_time,
+    EndTime=end_time,
+    PaginationConfig={"PageSize": 50}
+):
+    for event in page.get("Events", []):
+
+        # Extract the complete CloudTrail event details.
+        raw_detail = event.get("CloudTrailEvent", "{}")
+
+        try:
+            full_detail = json.loads(raw_detail)
+        except (json.JSONDecodeError, TypeError):
+            full_detail = {"RawCloudTrailEvent": raw_detail}
+
+        events.append({
+            "EventId": event.get("EventId"),
+            "EventName": event.get("EventName"),
+            "EventTime": event.get("EventTime").isoformat(),
+            "Username": event.get("Username"),
+            "EventSource": event.get("EventSource"),
+            "ReadOnly": event.get("ReadOnly"),
+            "Resources": event.get("Resources", []),
+            "CloudTrailEvent": full_detail
+        })
 
 
-# Save events as a JSON file
+# Save events as a JSON file.
 os.makedirs("cloudtrail_logs", exist_ok=True)
 
-filename = datetime.now().strftime(
+filename = datetime.now(timezone.utc).strftime(
     "cloudtrail_%Y%m%d_%H%M%S.json"
 )
 
@@ -50,15 +59,17 @@ filepath = os.path.join("cloudtrail_logs", filename)
 with open(filepath, "w") as file:
     json.dump(events, file, indent=4, default=str)
 
+
 print("\nCLOUDTRAIL COLLECTION REPORT")
 print("============================")
 print("Events collected:", len(events))
 print("File saved:", filepath)
 
 
-# Save events into PostgreSQL
+# Save events into PostgreSQL without duplicates.
 if events:
     conn = None
+    inserted_count = 0
 
     try:
         conn = get_connection()
@@ -82,6 +93,9 @@ if events:
                         event_data
                     )
                     VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (event_id)
+                    WHERE event_id IS NOT NULL
+                    DO NOTHING
                     """,
                     (
                         event["EventId"],
@@ -93,11 +107,12 @@ if events:
                     )
                 )
 
+                inserted_count += cursor.rowcount
+
         conn.commit()
 
-        print(
-            "CloudTrail events successfully saved to PostgreSQL!"
-        )
+        print("New events saved:", inserted_count)
+        print("Duplicate events skipped:", len(events) - inserted_count)
 
     except Exception as error:
         if conn:

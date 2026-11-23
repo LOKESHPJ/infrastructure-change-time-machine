@@ -30,3 +30,15 @@ terraform/terraform.tfstate.*
 awstouch
 *.log
 .venv312/
+
+# Allow safe environment template
+!.env.example
+
+# Backup and temporary files
+*.bak
+*.backup
+
+# Terraform backup directory and state files
+terraform_backup/
+**/terraform.tfstate
+**/terraform.tfstate.*

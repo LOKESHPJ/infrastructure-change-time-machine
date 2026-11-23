@@ -13,8 +13,23 @@ CREATE TABLE IF NOT EXISTS infrastructure_changes (
     change_type VARCHAR(50),
     attribute VARCHAR(100),
     old_value TEXT,
-    new_value TEXT
+    new_value TEXT,
+    previous_snapshot VARCHAR(255),
+    current_snapshot VARCHAR(255)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_infrastructure_changes_snapshot_change
+ON infrastructure_changes (
+    previous_snapshot,
+    current_snapshot,
+    resource_id,
+    change_type,
+    attribute,
+    COALESCE(old_value, '<NULL>'),
+    COALESCE(new_value, '<NULL>')
+)
+WHERE previous_snapshot IS NOT NULL
+  AND current_snapshot IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS cloudtrail_events (
     id SERIAL PRIMARY KEY,
@@ -26,11 +41,17 @@ CREATE TABLE IF NOT EXISTS cloudtrail_events (
     risk_level VARCHAR(20),
     event_data JSONB
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_cloudtrail_events_event_id
+ON cloudtrail_events (event_id)
+WHERE event_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS incident_reports (
     id SERIAL PRIMARY KEY,
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     snapshot_file VARCHAR(255),
     cloudtrail_file VARCHAR(255),
+    report_file VARCHAR(255),
     total_events INTEGER DEFAULT 0,
     report_data JSONB NOT NULL
 );

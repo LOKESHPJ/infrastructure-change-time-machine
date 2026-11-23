@@ -7,19 +7,24 @@ from psycopg2.extras import Json
 
 ec2 = boto3.client("ec2", region_name="us-east-1")
 
-response = ec2.describe_instances()
+paginator = ec2.get_paginator("describe_instances")
 
 instances = []
 
-for reservation in response["Reservations"]:
-    for instance in reservation["Instances"]:
-        instances.append({
-            "InstanceId": instance["InstanceId"],
-            "InstanceType": instance["InstanceType"],
-            "State": instance["State"]["Name"],
-            "PrivateIP": instance.get("PrivateIpAddress", "N/A"),
-            "AvailabilityZone": instance["Placement"]["AvailabilityZone"]
-        })
+for page in paginator.paginate():
+    for reservation in page["Reservations"]:
+        for instance in reservation["Instances"]:
+            instances.append({
+                "InstanceId": instance["InstanceId"],
+                "InstanceType": instance["InstanceType"],
+                "State": instance["State"]["Name"],
+                "PrivateIP": instance.get("PrivateIpAddress", "N/A"),
+                "AvailabilityZone": instance["Placement"]["AvailabilityZone"],
+                "Tags": {
+                    tag["Key"]: tag["Value"]
+                    for tag in instance.get("Tags", [])
+                }
+            })
 
 os.makedirs("snapshots", exist_ok=True)
 

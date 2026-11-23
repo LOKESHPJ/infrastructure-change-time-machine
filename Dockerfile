@@ -12,6 +12,7 @@ COPY cloudtrail_collector.py .
 COPY database.py .
 COPY event_analyzer.py .
 COPY incident_correlator.py .
+COPY transient_activity_detector.py .
 COPY incident_report.py .
 COPY recovery_planner.py .
 COPY recovery_logic.py .
